@@ -20,7 +20,7 @@ fun parseBencode(bencode: String): Pair<Any, Class<*>> {
         throw BencodeParseException("Provided bencode is invalid!", e)
     }
 
-    return Pair("a", String::class.java)
+    throw BencodeParseException("Unknown type of provided bencode!")
 }
 
 private fun parseBencodedString(bencodedString: String): String {
