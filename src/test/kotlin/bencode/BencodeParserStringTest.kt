@@ -13,7 +13,7 @@ class BencodeParserStringTest {
         assertEquals(firstExpected, firstActual)
 
         val secondActual = parseBencode("10:hellohello")[0].first
-        var secondExpected = "hellohello"
+        val secondExpected = "hellohello"
         assertEquals(secondExpected, secondActual)
     }
 
