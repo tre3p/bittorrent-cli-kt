@@ -1,5 +1,10 @@
 package bencode
 
+private const val INTEGER_TOKEN_START_CHAR = 'i'
+private const val LIST_TOKEN_START_CHAR = 'l'
+private const val MAP_TOKEN_START_CHAR = 'd'
+private const val END_TOKEN_CHAR = 'e'
+
 class BencodeParseException : Exception {
     constructor(msg: String, cause: Exception) : super(msg, cause)
     constructor(msg: String) : super(msg)
@@ -28,35 +33,30 @@ fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
  * Returns 'Triple', where first is parsed bencode value, second - it's type and the third is end position of parsed token in 'bencode' string.
  */
 private fun parseSingleBencodeToken(bencode: String, startIndex: Int): Triple<Any, Class<*>, Int> {
-    try {
+    return try {
         when {
-            // If first character is integer - it's a bencoded string type
-            Character.isDigit(bencode[startIndex]) -> {
-                val (decodedToken, tokenEndPosition) = parseBencodedString(bencode, startIndex)
-                return Triple(decodedToken, String::class.java, tokenEndPosition)
-            }
+            Character.isDigit(bencode[startIndex]) ->
+                parseBencodedString(bencode, startIndex).let { Triple(it.first, String::class.java, it.second) }
 
-            // If first character is 'i' - it's a bencoded integer type
-            bencode[startIndex] == 'i' -> {
-                val (decodedToken, tokenEndPosition) = parseBencodedInteger(bencode, startIndex)
-                return Triple(decodedToken, Int::class.java, tokenEndPosition)
-            }
+            bencode[startIndex] == INTEGER_TOKEN_START_CHAR ->
+                parseBencodedInteger(bencode, startIndex).let { Triple(it.first, Int::class.java, it.second) }
 
-            bencode[startIndex] == 'l' -> {
-                val (decodedToken, tokenEndPosition) = parseBencodedList(bencode, startIndex)
-                return Triple(decodedToken, List::class.java, tokenEndPosition)
-            }
+            bencode[startIndex] == LIST_TOKEN_START_CHAR ->
+                parseBencodedList(bencode, startIndex).let { Triple(it.first, List::class.java, it.second) }
+
+            bencode[startIndex] == MAP_TOKEN_START_CHAR ->
+                parseBencodedDictionary(bencode, startIndex).let { Triple(it.first, Map::class.java, it.second) }
+
+            else -> throw BencodeParseException("Unknown type of provided bencode!")
         }
     } catch (e: Exception) {
         throw BencodeParseException("Provided bencode is invalid!", e)
     }
-
-    throw BencodeParseException("Unknown type of provided bencode!")
 }
 
 /**
- * Parses string from 'bencode' starting from 'startIndex'.
- * Returns 'Pair', where first value is parsed string, and the second is end position of parsed token in 'bencode' string.
+ * Parses String from 'bencode' starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed String, and the second is end position of parsed token in 'bencode' string.
  */
 private fun parseBencodedString(bencode: String, startIndex: Int): Pair<String, Int> {
     val firstColonIndex = bencode.indexOf(':', startIndex)
@@ -74,21 +74,25 @@ private fun parseBencodedString(bencode: String, startIndex: Int): Pair<String, 
 }
 
 /**
- * Parses integer from 'bencode' starting from 'startIndex'.
- * Returns 'Pair', where first value is parsed integer, and the second value is end position of parsed token in 'bencode' string.
+ * Parses Integer from 'bencode' starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed Integer, and the second value is end position of parsed token in 'bencode' string.
  */
 private fun parseBencodedInteger(bencode: String, startIndex: Int): Pair<Int, Int> {
-    val integerEndIndex = bencode.indexOf('e', startIndex)
+    val integerEndIndex = bencode.indexOf(END_TOKEN_CHAR, startIndex)
     val bencodedValue = Integer.parseInt(bencode.substring(startIndex + 1, integerEndIndex))
 
     return Pair(bencodedValue, integerEndIndex)
 }
 
+/**
+ * Parses List from 'bencode' starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed List, and the second value is end position of parsed token in 'bencode' string.
+ */
 private fun parseBencodedList(bencode: String, startIndex: Int): Pair<List<Any>, Int> {
     var currentTokenPosition = startIndex + 1
     val listContent = mutableListOf<Any>()
 
-    while (bencode[currentTokenPosition] != 'e') {
+    while (bencode[currentTokenPosition] != END_TOKEN_CHAR) {
         val (decodedValue, _, tokenEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = tokenEndPosition + 1
         listContent.add(decodedValue)
@@ -97,6 +101,23 @@ private fun parseBencodedList(bencode: String, startIndex: Int): Pair<List<Any>,
     return Pair(listContent, currentTokenPosition)
 }
 
-private fun parseBencodedDictionary(bencode: String): Map<String, Pair<Any, Class<*>>> {
-    return mapOf()
+/**
+ * Parses Map from 'bencode' starting from 'startIndex'.
+ * Return 'Pair', where first value is parsed Map, and the second value is end position of parsed token in 'bencode' string.
+ */
+private fun parseBencodedDictionary(bencode: String, startIndex: Int): Pair<Map<Any, Any>, Int> {
+    var currentTokenPosition = startIndex + 1
+    val mapContent = mutableMapOf<Any, Any>()
+
+    while (bencode[currentTokenPosition] != END_TOKEN_CHAR) {
+        val (decodedMapKey, _, mapKeyEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        currentTokenPosition = mapKeyEndPosition + 1
+
+        val (decodedMapValue, _, mapValueEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        currentTokenPosition = mapValueEndPosition + 1
+
+        mapContent[decodedMapKey] = decodedMapValue
+    }
+
+    return Pair(mapContent, currentTokenPosition)
 }
