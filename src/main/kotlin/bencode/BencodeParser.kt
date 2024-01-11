@@ -1,5 +1,8 @@
 package bencode
 
+import extensions.firstIndexOf
+
+private const val STRING_DELIMITER_CHAR = ':'
 private const val INTEGER_TOKEN_START_CHAR = 'i'
 private const val LIST_TOKEN_START_CHAR = 'l'
 private const val MAP_TOKEN_START_CHAR = 'd'
@@ -52,6 +55,21 @@ private fun parseSingleBencodeToken(bencode: String, startIndex: Int): Triple<An
     } catch (e: Exception) {
         throw BencodeParseException("Provided bencode is invalid!", e)
     }
+}
+
+private fun parseBencodedStringByte(bencode: ByteArray, startIndex: Int): Pair<ByteArray, Int> {
+    val firstColonIndex = bencode.firstIndexOf(STRING_DELIMITER_CHAR.toByte(), startIndex)
+    val bencodeStringSize = Integer.parseInt(String(bencode.copyOfRange(startIndex, firstColonIndex)))
+
+    val stringStartIndex = firstColonIndex + 1
+    val stringEndIndex = stringStartIndex + bencodeStringSize
+
+    if (stringEndIndex > bencode.size) {
+        throw BencodeParseException("Bencoded array end index is bigger than array size")
+    }
+
+    val bencodedValue = bencode.copyOfRange(stringStartIndex, stringEndIndex)
+    return Pair(bencodedValue, stringEndIndex)
 }
 
 /**
