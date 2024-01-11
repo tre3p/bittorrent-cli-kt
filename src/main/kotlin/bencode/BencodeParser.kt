@@ -1,19 +1,45 @@
 package bencode
 
 class BencodeParseException : Exception {
-    constructor(msg: String, cause: Exception): super(msg, cause)
+    constructor(msg: String, cause: Exception) : super(msg, cause)
     constructor(msg: String) : super(msg)
 }
 
 /**
- * Parses exactly one bencode token.
- * Returns Pair object with bencode value as first parameter and it's type as second parameter
+ * Parses bencode string to list of 'Pair'.
+ * Accepts 'startIndex' as index from which parsing will be started.
  */
-fun parseBencode(bencode: String): Pair<Any, Class<*>> {
+private fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
+    val parsedTokens = mutableListOf<Pair<Any, Class<*>>>()
+    var nextTokenPosition = 0
+
+    while (nextTokenPosition < bencode.length) {
+        val (decodedToken, tokenType, tokenEndPosition) = parseSingleBencodeToken(bencode, nextTokenPosition)
+        nextTokenPosition = tokenEndPosition + 1
+
+        parsedTokens.add(Pair(decodedToken, tokenType))
+    }
+
+    return parsedTokens
+}
+
+/**
+ * Parses single bencode token from provided 'bencode' string starting from 'startIndex'.
+ * Returns 'Triple', where first is parsed bencode value, second - it's type and the third is end position of parsed token in 'bencode' string.
+ */
+private fun parseSingleBencodeToken(bencode: String, startIndex: Int): Triple<Any, Class<*>, Int> {
     try {
         when {
-            Character.isDigit(bencode[0]) -> {
-                return Pair(parseBencodedString(bencode), String::class.java)
+            // If first character is integer - it's a bencoded string type
+            Character.isDigit(bencode[startIndex]) -> {
+                val (decodedToken, tokenEndPosition) = parseBencodedString(bencode, startIndex)
+                return Triple(decodedToken, String::class.java, tokenEndPosition)
+            }
+
+            // If first character is 'i' - it's a bencoded integer type
+            bencode[startIndex] == 'i' -> {
+                val (decodedToken, tokenEndPosition) = parseBencodedInteger(bencode, startIndex)
+                return Triple(decodedToken, String::class.java, tokenEndPosition)
             }
         }
     } catch (e: Exception) {
@@ -23,28 +49,40 @@ fun parseBencode(bencode: String): Pair<Any, Class<*>> {
     throw BencodeParseException("Unknown type of provided bencode!")
 }
 
-private fun parseBencodedString(bencodedString: String): String {
-    val firstColonIndex = bencodedString.indexOfFirst { it == ':' }
-    val stringSizeIntegerLength = Integer.parseInt(bencodedString.substring(0, firstColonIndex))
+/**
+ * Parses string from 'bencode' starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed string, and the second is end position of parsed token in 'bencode' string.
+ */
+private fun parseBencodedString(bencode: String, startIndex: Int): Pair<String, Int> {
+    val firstColonIndex = bencode.indexOf(':', startIndex)
+    val bencodeStringSize = Integer.parseInt(bencode.substring(startIndex, firstColonIndex))
 
     val stringStartIndex = firstColonIndex + 1
-    val stringEndIndex = stringStartIndex + stringSizeIntegerLength
+    val stringEndIndex = (stringStartIndex + bencodeStringSize) - 1
 
-    if (stringEndIndex > bencodedString.length) {
+    if (stringEndIndex > bencode.length) {
         throw BencodeParseException("Bencoded string end index is bigger than string length")
     }
 
-    return bencodedString.substring(stringStartIndex, stringEndIndex)
+    val bencodedValue =  bencode.substring(stringStartIndex..stringEndIndex)
+    return Pair(bencodedValue, stringEndIndex)
 }
 
-private fun parseBencodedInteger(bencodedInteger: String): Int {
-    return 0
+/**
+ * Parses integer from 'bencode' starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed integer, and the second value is end position of parsed token in 'bencode' string.
+ */
+private fun parseBencodedInteger(bencode: String, startIndex: Int): Pair<Int, Int> {
+    val integerEndIndex = bencode.indexOf('e', startIndex)
+    val bencodedValue = Integer.parseInt(bencode.substring(startIndex + 1, integerEndIndex))
+
+    return Pair(bencodedValue, integerEndIndex)
 }
 
-private fun parseBencodedList(bencodedList: String): List<Any> {
+private fun parseBencodedList(bencode: String): List<Any> {
     return mutableListOf()
 }
 
-private fun parseBencodedDictionary(bencodedDictionary: String): Map<String, Pair<Any, Class<*>>> {
+private fun parseBencodedDictionary(bencode: String): Map<String, Pair<Any, Class<*>>> {
     return mapOf()
 }
