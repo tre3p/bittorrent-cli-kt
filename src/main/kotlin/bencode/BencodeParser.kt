@@ -9,7 +9,7 @@ class BencodeParseException : Exception {
  * Parses bencode string to list of 'Pair'.
  * Accepts 'startIndex' as index from which parsing will be started.
  */
-private fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
+fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
     val parsedTokens = mutableListOf<Pair<Any, Class<*>>>()
     var nextTokenPosition = 0
 
