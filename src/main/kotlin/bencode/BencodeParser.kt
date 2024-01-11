@@ -64,7 +64,7 @@ private fun parseBencodedString(bencode: String, startIndex: Int): Pair<String, 
         throw BencodeParseException("Bencoded string end index is bigger than string length")
     }
 
-    val bencodedValue =  bencode.substring(stringStartIndex..stringEndIndex)
+    val bencodedValue = bencode.substring(stringStartIndex..stringEndIndex)
     return Pair(bencodedValue, stringEndIndex)
 }
 
