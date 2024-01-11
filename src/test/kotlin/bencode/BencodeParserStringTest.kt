@@ -2,19 +2,19 @@ package bencode
 
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertContentEquals
 
 class BencodeParserStringTest {
 
     @Test
-    fun shouldCorrectlyParseBencodedString() {
-        val firstActual = parseBencode("5:hello")[0].first
-        val firstExpected = "hello"
-        assertEquals(firstExpected, firstActual)
+    fun shouldCorrectlyParseBencodedStringToByteArray() {
+        val firstActual = parseBencode("5:hello")[0].first as ByteArray
+        val firstExpected = "hello".encodeToByteArray()
+        assertContentEquals(firstExpected, firstActual)
 
-        val secondActual = parseBencode("10:hellohello")[0].first
-        val secondExpected = "hellohello"
-        assertEquals(secondExpected, secondActual)
+        val secondActual = parseBencode("10:hellohello")[0].first as ByteArray
+        val secondExpected = "hellohello".encodeToByteArray()
+        assertContentEquals(secondExpected, secondActual)
     }
 
     @Test

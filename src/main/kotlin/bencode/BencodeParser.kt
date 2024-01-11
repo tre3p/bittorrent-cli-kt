@@ -22,13 +22,27 @@ fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
     var nextTokenPosition = 0
 
     while (nextTokenPosition < bencode.length) {
-        val (decodedToken, tokenType, tokenEndPosition) = parseSingleBencodeToken(bencode, nextTokenPosition)
+        val (decodedToken, tokenType, tokenEndPosition) = parseSingleBencodeToken(bencode.encodeToByteArray(), nextTokenPosition)
         nextTokenPosition = tokenEndPosition + 1
 
         parsedTokens.add(Pair(decodedToken, tokenType))
     }
 
     return parsedTokens
+}
+
+private fun parseSingleBencodeToken(bencode: ByteArray, startIndex: Int): Triple<Any, Class<*>, Int> {
+    val byteToChar = Char(bencode[startIndex].toInt())
+
+    return try {
+        when {
+            Character.isDigit(byteToChar) ->
+                parseBencodedStringByte(bencode, startIndex).let { Triple(it.first, ByteArray::class.java, it.second) }
+            else -> throw BencodeParseException("Unknown type of provided bencode!")
+        }
+    } catch (e: Exception) {
+        throw BencodeParseException("Provided bencode is invalid!", e)
+    }
 }
 
 /**
@@ -38,9 +52,6 @@ fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
 private fun parseSingleBencodeToken(bencode: String, startIndex: Int): Triple<Any, Class<*>, Int> {
     return try {
         when {
-            Character.isDigit(bencode[startIndex]) ->
-                parseBencodedString(bencode, startIndex).let { Triple(it.first, String::class.java, it.second) }
-
             bencode[startIndex] == INTEGER_TOKEN_START_CHAR ->
                 parseBencodedInteger(bencode, startIndex).let { Triple(it.first, Int::class.java, it.second) }
 
@@ -57,8 +68,12 @@ private fun parseSingleBencodeToken(bencode: String, startIndex: Int): Triple<An
     }
 }
 
+/**
+ * Parses string from 'bencode' to ByteArray starting from 'startIndex'.
+ * Returns 'Pair', where first value is parsed string, and the second is end position of parsed token in 'bencode' byte array.
+ */
 private fun parseBencodedStringByte(bencode: ByteArray, startIndex: Int): Pair<ByteArray, Int> {
-    val firstColonIndex = bencode.firstIndexOf(STRING_DELIMITER_CHAR.toByte(), startIndex)
+    val firstColonIndex = bencode.firstIndexOf(STRING_DELIMITER_CHAR.code.toByte(), startIndex)
     val bencodeStringSize = Integer.parseInt(String(bencode.copyOfRange(startIndex, firstColonIndex)))
 
     val stringStartIndex = firstColonIndex + 1
@@ -69,25 +84,6 @@ private fun parseBencodedStringByte(bencode: ByteArray, startIndex: Int): Pair<B
     }
 
     val bencodedValue = bencode.copyOfRange(stringStartIndex, stringEndIndex)
-    return Pair(bencodedValue, stringEndIndex)
-}
-
-/**
- * Parses String from 'bencode' starting from 'startIndex'.
- * Returns 'Pair', where first value is parsed String, and the second is end position of parsed token in 'bencode' string.
- */
-private fun parseBencodedString(bencode: String, startIndex: Int): Pair<String, Int> {
-    val firstColonIndex = bencode.indexOf(':', startIndex)
-    val bencodeStringSize = Integer.parseInt(bencode.substring(startIndex, firstColonIndex))
-
-    val stringStartIndex = firstColonIndex + 1
-    val stringEndIndex = (stringStartIndex + bencodeStringSize) - 1
-
-    if (stringEndIndex > bencode.length) {
-        throw BencodeParseException("Bencoded string end index is bigger than string length")
-    }
-
-    val bencodedValue = bencode.substring(stringStartIndex..stringEndIndex)
     return Pair(bencodedValue, stringEndIndex)
 }
 
