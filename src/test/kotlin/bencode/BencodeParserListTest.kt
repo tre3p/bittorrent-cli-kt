@@ -22,5 +22,4 @@ class BencodeParserListTest {
         val actualList = parseBencode(bencodeString)[0].first
         assertEquals(expectedElements, actualList)
     }
-
 }
