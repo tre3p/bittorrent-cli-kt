@@ -1,5 +1,5 @@
 lint:
-        mvn antrun:run@ktlint
+		mvn antrun:run@ktlint
 
 test:
-        mvn clean test
+		mvn clean test
