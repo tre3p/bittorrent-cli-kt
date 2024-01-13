@@ -134,12 +134,12 @@ private fun parseBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<M
         currentTokenPosition = mapValueEndPosition + 1
 
         /*
-        * If parsed map key is byte array - store it as a string key instead of byte array to allow user
-        * get values using string literal instead of byte array string representation.
-        * Decoded map values must stay the same, because some of bencoded values are not valid UTF characters.
-        *
-        * TODO: rewrite this
-        */
+         * If parsed map key is byte array - store it as a string key instead of byte array to allow user
+         * get values using string literal instead of byte array string representation.
+         * Decoded map values must stay the same, because some of bencoded values are not valid UTF characters.
+         *
+         * TODO: rewrite this
+         */
         if (decodedMapKey is ByteArray) {
             resultMap[String(decodedMapKey)] = decodedMapValue
         } else {
