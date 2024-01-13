@@ -1,27 +1,21 @@
 package bencode
 
+import bencode.BencoderConstants.END_TOKEN_BYTE
+import bencode.BencoderConstants.INTEGER_TOKEN_START_BYTE
+import bencode.BencoderConstants.LIST_TOKEN_START_BYTE
+import bencode.BencoderConstants.MAP_TOKEN_START_BYTE
+import bencode.BencoderConstants.STRING_DELIMITER_BYTE
 import extensions.firstIndexOf
 
-private const val STRING_DELIMITER_BYTE = ':'.code.toByte()
-private const val INTEGER_TOKEN_START_BYTE = 'i'.code.toByte()
-private const val LIST_TOKEN_START_BYTE = 'l'.code.toByte()
-private const val MAP_TOKEN_START_BYTE = 'd'.code.toByte()
-private const val END_TOKEN_BYTE = 'e'.code.toByte()
-
-class BencodeParseException : Exception {
-    constructor(msg: String, cause: Exception) : super(msg, cause)
-    constructor(msg: String) : super(msg)
-}
-
 /**
- * Parses bencode string to list of 'Pair', where first is decoded value, and the second its type.
+ * Parses bencoded string to list.
  */
 fun decodeBencode(bencode: String): List<Any> {
     return decodeBencode(bencode.toByteArray())
 }
 
 /**
- * Parses bencoded byte array (ASCII chars) to list of 'Pair', where first is decoded value, and the second its type.
+ * Parses bencoded byte array (ASCII chars) to list.
  */
 fun decodeBencode(bencode: ByteArray): List<Any> {
     val parsedTokens = mutableListOf<Any>()
@@ -58,10 +52,10 @@ private fun decodeSingleBencodeToken(bencode: ByteArray, startIndex: Int): Pair<
             bencode[startIndex] == MAP_TOKEN_START_BYTE ->
                 decodeBencodedDictionary(bencode, startIndex).let { Pair(it.first, it.second) }
 
-            else -> throw BencodeParseException("Unknown type of provided bencode!")
+            else -> throw BencodeException("Unknown type of provided bencode!")
         }
     } catch (e: Exception) {
-        throw BencodeParseException("Provided bencode is invalid!", e)
+        throw BencodeException("Provided bencode is invalid!", e)
     }
 }
 
@@ -77,7 +71,7 @@ private fun decodeBencodedString(bencode: ByteArray, startIndex: Int): Pair<Byte
     val stringEndIndex = stringStartIndex + bencodeStringSize
 
     if (stringEndIndex > bencode.size) {
-        throw BencodeParseException("Bencoded array end index is bigger than array size")
+        throw BencodeException("Bencoded array end index is bigger than array size")
     }
 
     val bencodedValue = bencode.copyOfRange(stringStartIndex, stringEndIndex)
