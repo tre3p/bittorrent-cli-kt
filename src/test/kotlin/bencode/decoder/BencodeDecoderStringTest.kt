@@ -1,6 +1,6 @@
 package bencode.decoder
 
-import bencode.BencodeParseException
+import bencode.BencodeException
 import bencode.decodeBencode
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
@@ -29,6 +29,6 @@ class BencodeDecoderStringTest {
 
     @Test
     fun shouldThrowExceptionOnInvalidStringLengthProvided() {
-        assertThrows<BencodeParseException> { decodeBencode("135:definitelynot135length") }
+        assertThrows<BencodeException> { decodeBencode("135:definitelynot135length") }
     }
 }

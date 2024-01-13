@@ -1,6 +1,6 @@
 package bencode.decoder
 
-import bencode.BencodeParseException
+import bencode.BencodeException
 import bencode.decodeBencode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -29,6 +29,6 @@ class BencodeDecoderMapTest {
     @Test
     fun shouldThrowExceptionOnAmountOfKeysIsBiggerThanValues() {
         val bencodedMap = "d5:helloi13e3:abc4:listl13:somethinghereee"
-        assertThrows<BencodeParseException> { decodeBencode(bencodedMap) }
+        assertThrows<BencodeException> { decodeBencode(bencodedMap) }
     }
 }
