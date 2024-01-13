@@ -2,6 +2,7 @@ package bencode.encoder
 
 import bencode.encodeToBencode
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class BencodeEncoderIntegerTest {
@@ -12,7 +13,7 @@ class BencodeEncoderIntegerTest {
         val expected = "i5e".encodeToByteArray()
         val actual = encodeToBencode(int)
 
-        assertEquals(expected, actual)
+        assertContentEquals(expected, actual)
     }
 
     @Test
@@ -21,7 +22,7 @@ class BencodeEncoderIntegerTest {
         val expected = "i5ei4ei-3ei2e".encodeToByteArray()
         val actual = encodeToBencode(ints)
 
-        assertEquals(expected, actual)
+        assertContentEquals(expected, actual)
     }
 
 }

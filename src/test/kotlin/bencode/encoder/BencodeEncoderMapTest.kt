@@ -2,6 +2,7 @@ package bencode.encoder
 
 import bencode.encodeToBencode
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class BencodeEncoderMapTest {
@@ -12,7 +13,7 @@ class BencodeEncoderMapTest {
         val expected = "d3:stri2ei23e4:teste".encodeToByteArray()
         val actual = encodeToBencode(map)
 
-        assertEquals(expected, actual)
+        assertContentEquals(expected, actual)
     }
 
     @Test
@@ -21,7 +22,7 @@ class BencodeEncoderMapTest {
         val expected = "d3:abcli1ei2ee4:testdi1e7:bencodeee".encodeToByteArray()
         val actual = encodeToBencode(map)
 
-        assertEquals(expected, actual)
+        assertContentEquals(expected, actual)
     }
 
     @Test
@@ -30,7 +31,7 @@ class BencodeEncoderMapTest {
         val expected = "ld4:testi123e1:a1:bedi123e7:bencodeee".encodeToByteArray()
         val actual = encodeToBencode(maps)
 
-        assertEquals(expected, actual)
+        assertContentEquals(expected, actual)
     }
 
 }
