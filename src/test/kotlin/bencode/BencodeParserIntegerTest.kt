@@ -16,4 +16,10 @@ class BencodeParserIntegerTest {
         val actual = parseBencode("i-23e")[0].first
         assertEquals(-23, actual)
     }
+
+    @Test
+    fun shouldCorrectlyParseIntegerFromByteArray() {
+        val actual = parseBencode("i42e")[0].first
+        assertEquals(42, actual)
+    }
 }
