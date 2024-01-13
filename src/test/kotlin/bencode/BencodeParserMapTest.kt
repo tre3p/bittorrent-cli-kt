@@ -10,7 +10,7 @@ class BencodeParserMapTest {
     fun shouldCorrectlyParseBencodedMapFromString() {
         val bencodedMap = "d5:helloi12ei13ei99e4:listl13:somethinghereee"
         val expectedMap = mapOf("hello" to 12, 13 to 99, "list" to listOf("somethinghere"))
-        val actualMap = parseBencode(bencodedMap)[0].first
+        val actualMap = parseBencode(bencodedMap)[0]
 
         assertEquals(expectedMap, actualMap)
     }
@@ -19,7 +19,7 @@ class BencodeParserMapTest {
     fun shouldCorrectlyParseBencodedMapFromByteArray() {
         val bencodedMap = "d4:testi10ee".toByteArray()
         val expectedMap = mapOf("test" to 10)
-        val actualMap = parseBencode(bencodedMap)[0].first
+        val actualMap = parseBencode(bencodedMap)[0]
 
         assertEquals(expectedMap, actualMap)
     }

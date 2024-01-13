@@ -16,22 +16,22 @@ class BencodeParseException : Exception {
 /**
  * Parses bencode string to list of 'Pair', where first is decoded value, and the second its type.
  */
-fun parseBencode(bencode: String): List<Pair<Any, Class<*>>> {
+fun parseBencode(bencode: String): List<Any> {
     return parseBencode(bencode.toByteArray())
 }
 
 /**
  * Parses bencoded byte array (ASCII chars) to list of 'Pair', where first is decoded value, and the second its type.
  */
-fun parseBencode(bencode: ByteArray): List<Pair<Any, Class<*>>> {
-    val parsedTokens = mutableListOf<Pair<Any, Class<*>>>()
+fun parseBencode(bencode: ByteArray): List<Any> {
+    val parsedTokens = mutableListOf<Any>()
     var nextTokenPosition = 0
 
     while (nextTokenPosition < bencode.size) {
-        val (decodedToken, tokenType, tokenEndPosition) = parseSingleBencodeToken(bencode, nextTokenPosition)
+        val (decodedToken, tokenEndPosition) = parseSingleBencodeToken(bencode, nextTokenPosition)
         nextTokenPosition = tokenEndPosition + 1
 
-        parsedTokens.add(Pair(decodedToken, tokenType))
+        parsedTokens.add(decodedToken)
     }
 
     return parsedTokens
@@ -39,24 +39,24 @@ fun parseBencode(bencode: ByteArray): List<Pair<Any, Class<*>>> {
 
 /**
  * Parses single bencode token from provided 'bencode' byte array starting from 'startIndex'.
- * Returns 'Triple', where first is parsed bencode value, second - it's type and the third is end position of parsed token in 'bencode' byte array.
+ * Returns 'Pair', where first is parsed bencode value, second is end position of parsed token in 'bencode' byte array
  */
-private fun parseSingleBencodeToken(bencode: ByteArray, startIndex: Int): Triple<Any, Class<*>, Int> {
+private fun parseSingleBencodeToken(bencode: ByteArray, startIndex: Int): Pair<Any, Int> {
     val byteToChar = Char(bencode[startIndex].toInt())
 
     return try {
         when {
             Character.isDigit(byteToChar) ->
-                parseBencodedString(bencode, startIndex).let { Triple(it.first, ByteArray::class.java, it.second) }
+                parseBencodedString(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == INTEGER_TOKEN_START_BYTE ->
-                parseBencodedInteger(bencode, startIndex).let { Triple(it.first, Int::class.java, it.second) }
+                parseBencodedInteger(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == LIST_TOKEN_START_BYTE ->
-                parseBencodedList(bencode, startIndex).let { Triple(it.first, List::class.java, it.second) }
+                parseBencodedList(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == MAP_TOKEN_START_BYTE ->
-                parseBencodedDictionary(bencode, startIndex).let { Triple(it.first, Map::class.java, it.second) }
+                parseBencodedDictionary(bencode, startIndex).let { Pair(it.first, it.second) }
 
             else -> throw BencodeParseException("Unknown type of provided bencode!")
         }
@@ -105,11 +105,11 @@ private fun parseBencodedList(bencode: ByteArray, startIndex: Int): Pair<List<An
     val listContent = mutableListOf<Any>()
 
     while (bencode[currentTokenPosition] != END_TOKEN_BYTE) {
-        val (decodedValue, decodedValueType, tokenEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedValue, tokenEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = tokenEndPosition + 1
 
-        if (decodedValueType == ByteArray::class.java) {
-            listContent.add(String(decodedValue as ByteArray))
+        if (decodedValue is ByteArray) {
+            listContent.add(String(decodedValue))
         } else {
             listContent.add(decodedValue)
         }
@@ -127,10 +127,10 @@ private fun parseBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<M
     val resultMap = mutableMapOf<Any, Any>()
 
     while (bencode[currentTokenPosition] != END_TOKEN_BYTE) {
-        val (decodedMapKey, mapKeyType, mapKeyEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedMapKey, mapKeyEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = mapKeyEndPosition + 1
 
-        val (decodedMapValue, _, mapValueEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedMapValue, mapValueEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = mapValueEndPosition + 1
 
         /*
@@ -140,8 +140,8 @@ private fun parseBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<M
         *
         * TODO: rewrite this
         */
-        if (mapKeyType == ByteArray::class.java) {
-            resultMap[String(decodedMapKey as ByteArray)] = decodedMapValue
+        if (decodedMapKey is ByteArray) {
+            resultMap[String(decodedMapKey)] = decodedMapValue
         } else {
             resultMap[decodedMapKey] = decodedMapValue
         }
