@@ -7,10 +7,19 @@ import kotlin.test.assertEquals
 class BencodeParserMapTest {
 
     @Test
-    fun shouldCorrectlyParseBencodedMap() {
-        val bencodedMap = "d5:helloi12ei13e3:abc4:listl13:somethinghereee"
-        val expectedMap = mapOf("hello" to 12, 13 to "abc", "list" to listOf("somethinghere"))
-        val actualMap = parseBencode(bencodedMap)[0].first
+    fun shouldCorrectlyParseBencodedMapFromString() {
+        val bencodedMap = "d5:helloi12ei13ei99e4:listl13:somethinghereee"
+        val expectedMap = mapOf("hello" to 12, 13 to 99, "list" to listOf("somethinghere"))
+        val actualMap = parseBencode(bencodedMap)[0]
+
+        assertEquals(expectedMap, actualMap)
+    }
+
+    @Test
+    fun shouldCorrectlyParseBencodedMapFromByteArray() {
+        val bencodedMap = "d4:testi10ee".toByteArray()
+        val expectedMap = mapOf("test" to 10)
+        val actualMap = parseBencode(bencodedMap)[0]
 
         assertEquals(expectedMap, actualMap)
     }
