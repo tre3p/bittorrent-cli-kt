@@ -16,19 +16,19 @@ class BencodeParseException : Exception {
 /**
  * Parses bencode string to list of 'Pair', where first is decoded value, and the second its type.
  */
-fun parseBencode(bencode: String): List<Any> {
-    return parseBencode(bencode.toByteArray())
+fun decodeBencode(bencode: String): List<Any> {
+    return decodeBencode(bencode.toByteArray())
 }
 
 /**
  * Parses bencoded byte array (ASCII chars) to list of 'Pair', where first is decoded value, and the second its type.
  */
-fun parseBencode(bencode: ByteArray): List<Any> {
+fun decodeBencode(bencode: ByteArray): List<Any> {
     val parsedTokens = mutableListOf<Any>()
     var nextTokenPosition = 0
 
     while (nextTokenPosition < bencode.size) {
-        val (decodedToken, tokenEndPosition) = parseSingleBencodeToken(bencode, nextTokenPosition)
+        val (decodedToken, tokenEndPosition) = decodeSingleBencodeToken(bencode, nextTokenPosition)
         nextTokenPosition = tokenEndPosition + 1
 
         parsedTokens.add(decodedToken)
@@ -41,22 +41,22 @@ fun parseBencode(bencode: ByteArray): List<Any> {
  * Parses single bencode token from provided 'bencode' byte array starting from 'startIndex'.
  * Returns 'Pair', where first is parsed bencode value, second is end position of parsed token in 'bencode' byte array
  */
-private fun parseSingleBencodeToken(bencode: ByteArray, startIndex: Int): Pair<Any, Int> {
+private fun decodeSingleBencodeToken(bencode: ByteArray, startIndex: Int): Pair<Any, Int> {
     val byteToChar = Char(bencode[startIndex].toInt())
 
     return try {
         when {
             Character.isDigit(byteToChar) ->
-                parseBencodedString(bencode, startIndex).let { Pair(it.first, it.second) }
+                decodeBencodedString(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == INTEGER_TOKEN_START_BYTE ->
-                parseBencodedInteger(bencode, startIndex).let { Pair(it.first, it.second) }
+                decodeBencodedInteger(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == LIST_TOKEN_START_BYTE ->
-                parseBencodedList(bencode, startIndex).let { Pair(it.first, it.second) }
+                decodeBencodedList(bencode, startIndex).let { Pair(it.first, it.second) }
 
             bencode[startIndex] == MAP_TOKEN_START_BYTE ->
-                parseBencodedDictionary(bencode, startIndex).let { Pair(it.first, it.second) }
+                decodeBencodedDictionary(bencode, startIndex).let { Pair(it.first, it.second) }
 
             else -> throw BencodeParseException("Unknown type of provided bencode!")
         }
@@ -69,7 +69,7 @@ private fun parseSingleBencodeToken(bencode: ByteArray, startIndex: Int): Pair<A
  * Parses string from 'bencode' to ByteArray starting from 'startIndex'.
  * Returns 'Pair', where first value is parsed string, and the second is end position of parsed token in 'bencode' byte array.
  */
-private fun parseBencodedString(bencode: ByteArray, startIndex: Int): Pair<ByteArray, Int> {
+private fun decodeBencodedString(bencode: ByteArray, startIndex: Int): Pair<ByteArray, Int> {
     val firstColonIndex = bencode.firstIndexOf(STRING_DELIMITER_BYTE, startIndex)
     val bencodeStringSize = Integer.parseInt(String(bencode.copyOfRange(startIndex, firstColonIndex)))
 
@@ -89,7 +89,7 @@ private fun parseBencodedString(bencode: ByteArray, startIndex: Int): Pair<ByteA
  * Parses integer from 'bencode' starting from 'startIndex'.
  * Returns 'Pair', where first value is parsed integer, and the second value is end position of parsed token in 'bencode' byte array.
  */
-private fun parseBencodedInteger(bencode: ByteArray, startIndex: Int): Pair<Int, Int> {
+private fun decodeBencodedInteger(bencode: ByteArray, startIndex: Int): Pair<Int, Int> {
     val integerEndIndex = bencode.firstIndexOf(END_TOKEN_BYTE, startIndex)
     val bencodedValue = Integer.parseInt(String(bencode.copyOfRange(startIndex + 1, integerEndIndex)))
 
@@ -100,12 +100,12 @@ private fun parseBencodedInteger(bencode: ByteArray, startIndex: Int): Pair<Int,
  * Parses list from 'bencode' starting from 'startIndex'.
  * Returns 'Pair', where first value is parsed list, and the second value is end position of parsed token in 'bencode' byte array.
  */
-private fun parseBencodedList(bencode: ByteArray, startIndex: Int): Pair<List<Any>, Int> {
+private fun decodeBencodedList(bencode: ByteArray, startIndex: Int): Pair<List<Any>, Int> {
     var currentTokenPosition = startIndex + 1
     val listContent = mutableListOf<Any>()
 
     while (bencode[currentTokenPosition] != END_TOKEN_BYTE) {
-        val (decodedValue, tokenEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedValue, tokenEndPosition) = decodeSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = tokenEndPosition + 1
 
         if (decodedValue is ByteArray) {
@@ -122,15 +122,15 @@ private fun parseBencodedList(bencode: ByteArray, startIndex: Int): Pair<List<An
  * Parses Map from 'bencode' starting from 'startIndex'.
  * Return 'Pair', where first value is parsed Map, and the second value is end position of parsed token in 'bencode' byte array.
  */
-private fun parseBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<Map<Any, Any>, Int> {
+private fun decodeBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<Map<Any, Any>, Int> {
     var currentTokenPosition = startIndex + 1
     val resultMap = mutableMapOf<Any, Any>()
 
     while (bencode[currentTokenPosition] != END_TOKEN_BYTE) {
-        val (decodedMapKey, mapKeyEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedMapKey, mapKeyEndPosition) = decodeSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = mapKeyEndPosition + 1
 
-        val (decodedMapValue, mapValueEndPosition) = parseSingleBencodeToken(bencode, currentTokenPosition)
+        val (decodedMapValue, mapValueEndPosition) = decodeSingleBencodeToken(bencode, currentTokenPosition)
         currentTokenPosition = mapValueEndPosition + 1
 
         /*

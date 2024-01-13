@@ -1,25 +1,27 @@
-package bencode
+package bencode.decoder
 
+import bencode.BencodeParseException
+import bencode.decodeBencode
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 
-class BencodeParserStringTest {
+class BencodeDecoderStringTest {
 
     @Test
     fun shouldCorrectlyParseBencodedStringToByteArray() {
-        val firstActual = parseBencode("5:hello")[0] as ByteArray
+        val firstActual = decodeBencode("5:hello")[0] as ByteArray
         val firstExpected = "hello".encodeToByteArray()
         assertContentEquals(firstExpected, firstActual)
 
-        val secondActual = parseBencode("10:hellohello")[0] as ByteArray
+        val secondActual = decodeBencode("10:hellohello")[0] as ByteArray
         val secondExpected = "hellohello".encodeToByteArray()
         assertContentEquals(secondExpected, secondActual)
     }
 
     @Test
     fun shouldCorrectlyParseStringFromByteArray() {
-        val actual = parseBencode("4:test".encodeToByteArray())[0] as ByteArray
+        val actual = decodeBencode("4:test".encodeToByteArray())[0] as ByteArray
         val expected = "test".encodeToByteArray()
 
         assertContentEquals(expected, actual)
@@ -27,6 +29,6 @@ class BencodeParserStringTest {
 
     @Test
     fun shouldThrowExceptionOnInvalidStringLengthProvided() {
-        assertThrows<BencodeParseException> { parseBencode("135:definitelynot135length") }
+        assertThrows<BencodeParseException> { decodeBencode("135:definitelynot135length") }
     }
 }
