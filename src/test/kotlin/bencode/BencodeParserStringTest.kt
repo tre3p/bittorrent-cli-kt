@@ -18,6 +18,14 @@ class BencodeParserStringTest {
     }
 
     @Test
+    fun shouldCorrectlyParseStringFromByteArray() {
+        val actual = parseBencode("4:test".encodeToByteArray())[0].first as ByteArray
+        val expected = "test".encodeToByteArray()
+
+        assertContentEquals(expected, actual)
+    }
+
+    @Test
     fun shouldThrowExceptionOnInvalidStringLengthProvided() {
         assertThrows<BencodeParseException> { parseBencode("135:definitelynot135length") }
     }
