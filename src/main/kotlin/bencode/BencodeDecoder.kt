@@ -5,7 +5,6 @@ import bencode.BencoderConstants.INTEGER_TOKEN_START_BYTE
 import bencode.BencoderConstants.LIST_TOKEN_START_BYTE
 import bencode.BencoderConstants.MAP_TOKEN_START_BYTE
 import bencode.BencoderConstants.STRING_DELIMITER_BYTE
-import extensions.firstIndexOf
 
 /**
  * Parses bencoded string to list.
@@ -142,4 +141,14 @@ private fun decodeBencodedDictionary(bencode: ByteArray, startIndex: Int): Pair<
     }
 
     return Pair(resultMap, currentTokenPosition)
+}
+
+fun ByteArray.firstIndexOf(target: Byte, startPosition: Int): Int {
+    for (i in startPosition..this.size) {
+        if (target == this[i]) {
+            return i
+        }
+    }
+
+    return -1
 }
