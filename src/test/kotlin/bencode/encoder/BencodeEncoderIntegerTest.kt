@@ -14,5 +14,4 @@ class BencodeEncoderIntegerTest {
 
         assertContentEquals(expected, actual)
     }
-
 }

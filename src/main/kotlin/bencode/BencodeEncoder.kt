@@ -1,14 +1,14 @@
 package bencode
 
-import bencode.BencoderConstants.STRING_DELIMITER_CHAR
-import bencode.BencoderConstants.INTEGER_TOKEN_START_CHAR
-import bencode.BencoderConstants.MAP_TOKEN_START_CHAR
-import bencode.BencoderConstants.LIST_TOKEN_START_CHAR
 import bencode.BencoderConstants.END_TOKEN_CHAR
+import bencode.BencoderConstants.INTEGER_TOKEN_START_CHAR
+import bencode.BencoderConstants.LIST_TOKEN_START_CHAR
+import bencode.BencoderConstants.MAP_TOKEN_START_CHAR
+import bencode.BencoderConstants.STRING_DELIMITER_CHAR
 import java.lang.StringBuilder
 
 fun encodeToBencode(obj: Any): ByteArray {
-    return when(obj) {
+    return when (obj) {
         is String -> encodeString(obj)
         is Int -> encodeInt(obj)
         is List<*> -> encodeList(obj as List<Any>)
@@ -18,11 +18,11 @@ fun encodeToBencode(obj: Any): ByteArray {
 }
 
 private fun encodeString(str: String): String {
-    return "${str.length}${STRING_DELIMITER_CHAR}${str}"
+    return "${str.length}$STRING_DELIMITER_CHAR$str"
 }
 
 private fun encodeInt(int: Int): String {
-    return "${INTEGER_TOKEN_START_CHAR}${int}${END_TOKEN_CHAR}"
+    return "$INTEGER_TOKEN_START_CHAR$int$END_TOKEN_CHAR"
 }
 
 private fun encodeList(list: List<Any>): String {

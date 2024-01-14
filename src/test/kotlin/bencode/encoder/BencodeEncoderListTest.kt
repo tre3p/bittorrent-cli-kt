@@ -1,7 +1,6 @@
 package bencode.encoder
 
 import bencode.encodeToBencode
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContentEquals
 
@@ -24,5 +23,4 @@ class BencodeEncoderListTest {
 
         assertContentEquals(expected, actual)
     }
-
 }
