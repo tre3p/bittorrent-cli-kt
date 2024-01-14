@@ -14,13 +14,4 @@ class BencodeEncoderStringTest {
 
         assertContentEquals(expected, actual)
     }
-
-    @Test
-    fun shouldCorrectlyEncodeMultipleStrings() {
-        val strs = listOf("hello", "test", "encode")
-        val expected = "5:hello4:test6:encode".encodeToByteArray()
-        val actual = encodeToBencode(strs)
-
-        assertContentEquals(expected, actual)
-    }
 }

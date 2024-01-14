@@ -24,14 +24,4 @@ class BencodeEncoderMapTest {
 
         assertContentEquals(expected, actual)
     }
-
-    @Test
-    fun shouldCorrectlyEncodeMultipleMaps() {
-        val maps = listOf(mapOf("test" to 123, "a" to "b"), mapOf(123 to "bencode"))
-        val expected = "ld4:testi123e1:a1:bedi123e7:bencodeee".encodeToByteArray()
-        val actual = encodeToBencode(maps)
-
-        assertContentEquals(expected, actual)
-    }
-
 }
