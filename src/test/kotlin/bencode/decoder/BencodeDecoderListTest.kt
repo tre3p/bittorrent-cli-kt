@@ -1,16 +1,17 @@
-package bencode
+package bencode.decoder
 
+import bencode.decodeBencode
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class BencodeParserListTest {
+class BencodeDecoderListTest {
 
     @Test
     fun shouldCorrectlyParseList() {
         val bencodeString = "l11:bencodetesti42e4:hihie"
         val expectedElements = listOf("bencodetest", 42, "hihi")
 
-        val actualList = parseBencode(bencodeString)[0]
+        val actualList = decodeBencode(bencodeString)[0]
         assertEquals(expectedElements, actualList)
     }
 
@@ -19,7 +20,7 @@ class BencodeParserListTest {
         val bencodeString = "l5:helloli42e2:hiee"
         val expectedElements = listOf("hello", listOf(42, "hi"))
 
-        val actualList = parseBencode(bencodeString)[0]
+        val actualList = decodeBencode(bencodeString)[0]
         assertEquals(expectedElements, actualList)
     }
 }
