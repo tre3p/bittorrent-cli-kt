@@ -11,7 +11,6 @@ fun encodeToBencode(obj: Any): ByteArray {
         is String -> encodeString(obj.encodeToByteArray())
         is ByteArray -> encodeString(obj)
         is Int -> encodeInt(obj)
-        is ByteArray -> encodeString(String(obj))
         is List<*> -> encodeList(obj as List<Any>)
         is Map<*, *> -> encodeMap(obj as Map<Any, Any>)
         else -> throw BencodeException("Unknown token type!")
