@@ -4,8 +4,10 @@ import bencode.decodeBencode
 import bencode.encodeToBencode
 import client.discoverPeers
 import dto.TorrentClientInfo
+import entity.Peer
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.lang.Exception
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.MessageDigest
@@ -28,12 +30,9 @@ fun parseTorrentFile(torrentFile: File): Torrent {
     return Torrent(announceUrl, infoMap)
 }
 
-@OptIn(ExperimentalStdlibApi::class) // TODO: remove it when toHexString() is no longer experimental API
-fun calculateTorrentInfoHash(torrent: Torrent): String {
+fun calculateTorrentInfoHash(torrent: Torrent): ByteArray {
     val bencodedInfoMap = encodeToBencode(torrent.info)
-    val infoHashHex = MessageDigest.getInstance("SHA-1").digest(bencodedInfoMap).toHexString()
-
-    return infoHashHex
+    return MessageDigest.getInstance("SHA-1").digest(bencodedInfoMap)
 }
 
 @OptIn(ExperimentalStdlibApi::class) // TODO: remove it when toHexString() is no longer experimental API
@@ -46,41 +45,55 @@ fun getPieceHashes(torrent: Torrent): List<String> {
         .collect(Collectors.toList())
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
+fun decodePeers(peersBytes: ByteArray): List<Peer> {
+    val unsignedPeersBytes = peersBytes.toUByteArray().toByteArray()
+
+    return unsignedPeersBytes.toList().chunked(6)
+        .stream()
+        .map {
+            val peerIp = "${it.slice(0..3).joinToString(".")}"
+            val peerPort = ByteBuffer.wrap(it.slice(4..5).toByteArray()).order(ByteOrder.BIG_ENDIAN).getShort().toUShort()
+
+            Peer("$peerIp:$peerPort")
+        }
+        .collect(Collectors.toList())
+}
+
+@OptIn(ExperimentalStdlibApi::class)
 fun main() {
-    val f = parseTorrentFile(File("debian.torrent"))
-    val infoHash = calculateTorrentInfoHash(f)
+    val f = parseTorrentFile(File("debian-arm.torrent"))
+    val torrentInfoHash = calculateTorrentInfoHash(f)
     val torrentClientInfo = TorrentClientInfo(
-        urlEncodeInfoHash(infoHash),
+        torrentInfoHash.toHexString(),
         "00112233445566778899",
-        6881,
+        6889,
         0,
         0,
         0,
         1
     )
+    val discoverPeers = runBlocking { discoverPeers(f.announce, torrentClientInfo) }
+    val map = decodeBencode(discoverPeers)[0] as Map<String, Any>
+    val peers = decodePeers(map["peers"] as ByteArray)
 
-    val discoverPeersResponse = runBlocking { discoverPeers(f.announce, torrentClientInfo) }
-    println(String(discoverPeersResponse))
-    val decodeBencode = decodeBencode(discoverPeersResponse)[0] as Map<String, Any>
-    println(decodeBencode)
-    val p = (decodeBencode["peers"] as ByteArray).map { it.toUByte() }
-    println(decodePeers(p))
-}
+    for (peer in peers) {
+        val payload = byteArrayOf(19)
+            .plus("BitTorrent protocol".toByteArray())
+            .plus(ByteArray(8))
+            .plus(torrentInfoHash)
+            .plus("00112233445566778899".toByteArray())
 
-fun urlEncodeInfoHash(infoHash: String): String {
-    return infoHash.chunked(2)
-        .joinToString(separator = "%", prefix = "%")
-}
+        peer.connect { outStream, inStream ->
+            val resp = ByteArray(payload.size)
+            try {
+                outStream.write(payload)
+                inStream.readFully(resp)
+            } catch (e: Exception) {
+                println("Error while handshaking peer")
+            }
 
-@OptIn(ExperimentalUnsignedTypes::class)
-fun decodePeers(peersBytes: List<UByte>): List<String> {
-    return peersBytes.toList().chunked(6)
-        .stream()
-        .map {
-            val peerIp = "${it.slice(0..3).joinToString(".")}"
-            val peerPort = ByteBuffer.wrap(it.slice(4..5).toUByteArray().toByteArray()).order(ByteOrder.BIG_ENDIAN).getShort().toUShort()
-
-            "$peerIp:$peerPort"
+            println("Peer ID: ${resp.takeLast(20).toByteArray().toHexString()}") // Use only the last 20 bytes.
         }
-        .collect(Collectors.toList())
+    }
 }

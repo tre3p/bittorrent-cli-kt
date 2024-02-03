@@ -11,7 +11,7 @@ private val httpClient = HttpClient(CIO)
 suspend fun discoverPeers(discoverPeersUrl: String, torrentClientInfo: TorrentClientInfo): ByteArray {
     val resp = httpClient.get(discoverPeersUrl) {
         url {
-            encodedParameters.append("info_hash", torrentClientInfo.infoHash)
+            encodedParameters.append("info_hash", urlEncodeInfoHash(torrentClientInfo.infoHash))
             parameters.append("peer_id", torrentClientInfo.peerId)
             parameters.append("port", torrentClientInfo.port.toString())
             parameters.append("uploaded", torrentClientInfo.uploaded.toString())
@@ -22,4 +22,9 @@ suspend fun discoverPeers(discoverPeersUrl: String, torrentClientInfo: TorrentCl
     }
 
     return resp.body<ByteArray>()
+}
+
+private fun urlEncodeInfoHash(infoHash: String): String {
+    return infoHash.chunked(2)
+        .joinToString(separator = "%", prefix = "%")
 }
