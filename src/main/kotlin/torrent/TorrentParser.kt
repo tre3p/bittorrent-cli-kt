@@ -4,6 +4,7 @@ import bencode.decodeBencode
 import bencode.encodeToBencode
 import java.io.File
 import java.security.MessageDigest
+import java.util.stream.Collectors
 
 data class Torrent(
     val announce: String,
@@ -26,4 +27,14 @@ fun calculateTorrentInfoHash(torrent: Torrent): String {
     val infoHashHex = MessageDigest.getInstance("SHA-1").digest(bencodedInfoMap).toHexString()
 
     return infoHashHex
+}
+
+@OptIn(ExperimentalStdlibApi::class) // TODO: remove it when toHexString() is no longer experimental API
+fun getPieceHashes(torrent: Torrent): List<String> {
+    return (torrent.info["pieces"] as ByteArray)
+        .toList()
+        .chunked(20) // amount of bytes in one piece hash
+        .stream()
+        .map { it.toByteArray().toHexString() }
+        .collect(Collectors.toList())
 }
