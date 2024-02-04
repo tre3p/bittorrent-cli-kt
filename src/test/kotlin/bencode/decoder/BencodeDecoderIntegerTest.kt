@@ -20,7 +20,7 @@ class BencodeDecoderIntegerTest {
 
     @Test
     fun shouldCorrectlyParseIntegerFromByteArray() {
-        val actual = decodeBencode("i42e")[0]
+        val actual = decodeBencode("i42e".encodeToByteArray())[0]
         assertEquals(42, actual)
     }
 }
