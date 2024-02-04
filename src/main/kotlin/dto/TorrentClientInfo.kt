@@ -1,7 +1,7 @@
 package dto
 
 data class TorrentClientInfo(
-    val infoHash: String,
+    val infoHash: ByteArray,
     val peerId: String,
     val port: Int,
     val uploaded: Int,

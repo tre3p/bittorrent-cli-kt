@@ -34,7 +34,8 @@ suspend fun discoverPeers(discoverPeersUrl: String, torrentClientInfo: TorrentCl
         .collect(Collectors.toList())
 }
 
-private fun urlEncodeInfoHash(infoHash: String): String {
-    return infoHash.chunked(2)
+@OptIn(ExperimentalStdlibApi::class)
+private fun urlEncodeInfoHash(infoHash: ByteArray): String {
+    return infoHash.toHexString().chunked(2)
         .joinToString(separator = "%", prefix = "%")
 }

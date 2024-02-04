@@ -9,12 +9,11 @@ import kotlin.text.toHexString
 private const val CLIENT_ID = "00112233445566778899"
 private const val CLIENT_PORT = 6889
 
-@OptIn(ExperimentalStdlibApi::class)
 fun main() = runBlocking {
     val f = Torrent(File("debian.torrent"))
     val torrentInfoHash = f.getInfoHash()
     val torrentClientInfo = TorrentClientInfo(
-        torrentInfoHash.toHexString(),
+        torrentInfoHash,
         CLIENT_ID,
         CLIENT_PORT,
         0,

@@ -21,7 +21,7 @@ class Peer(private val socketAddress: InetSocketAddress) {
         private const val PEER_CONNECTION_TIMEOUT_MS = 5000
         private const val BITTORRENT_PROTOCOL_ID: Byte = 19
         private val BITTORRENT_PROTOCOL_STR = "BitTorrent protocol".toByteArray()
-        private const val RESERVED_BYTES_AMOUNT = 8
+        private const val HANDSHAKE_RESERVED_BYTES_AMOUNT = 8
     }
 
     constructor(socketAddress: ByteArray) : this(
@@ -44,7 +44,7 @@ class Peer(private val socketAddress: InetSocketAddress) {
 
         val handshakePayload = byteArrayOf(BITTORRENT_PROTOCOL_ID)
             .plus(BITTORRENT_PROTOCOL_STR)
-            .plus(ByteArray(RESERVED_BYTES_AMOUNT))
+            .plus(ByteArray(HANDSHAKE_RESERVED_BYTES_AMOUNT))
             .plus(infoHash)
             .plus(torrentClientId)
 
